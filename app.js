@@ -38,12 +38,25 @@ app.use("/rating", ratingRoutes);
 const notificationRoutes = require("./src/routes/NotificationRouter");
 app.use("/notification", notificationRoutes);
 
-const dashboardRoutes = require("./src/routes/DashBoardRouter"); 
+const dashboardRoutes = require("./src/routes/DashBoardRouter");
 app.use("/dashboard", dashboardRoutes); //
 
-mongoose.connect(process.env.DB_URL).then(() => {
-  console.log("database connected....");
-});
+// mongoose.connect(process.env.DB_URL).then(() => {
+//   console.log("database connected....");
+// });
+
+const dbURL =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_DB_URL // MongoDB Atlas
+    : process.env.DB_URL; // Local MongoDB / Compass
+
+mongoose
+  .connect(dbURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Database connected..."))
+  .catch((err) => console.log("DB Connection Error:", err));
 
 // server creation...
 
