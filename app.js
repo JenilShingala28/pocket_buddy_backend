@@ -56,11 +56,11 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log("Database connected..."))
-  .catch((err) => console.log("DB Connection Error:", err));
+  .catch((err) => console.error("DB Connection Error:", err));
 
 // server creation...
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("server started on port number", PORT);
 });
