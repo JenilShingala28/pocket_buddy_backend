@@ -2,6 +2,7 @@ const { json } = require("express");
 const UserModel = require("../models/UserModel");
 const bcrypt = require("bcrypt");
 
+const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 const cloudinaryUtil = require("../utils/CloudinaryUtil");
@@ -11,8 +12,24 @@ const jwt = require("jsonwebtoken");
 const secret = "secret";
 
 //storage
+// const storage = multer.diskStorage({
+//   destination: "./upload",
+//   filename: function (req, file, cb) {
+//     cb(null, file.originalname);
+//   },
+// });
+
+const uploadDir = path.join(process.cwd(), "uploads");
+
+// make sure folder exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-  destination: "./upload",
+  destination: function (req, file, cb) {
+    cb(null, uploadDir); // ✅ relative folder
+  },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
   },
@@ -105,18 +122,17 @@ const ulogin = async (req, res) => {
 
 const signup = async (req, res) => {
   try {
+    // Check if a user already exists with the same email or contact
+    const existingUser = await UserModel.findOne({
+      email: req.body.email,
+    });
 
-      // Check if a user already exists with the same email or contact
-      const existingUser = await UserModel.findOne({
-        email: req.body.email 
+    if (existingUser) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "User with this email already exists.",
       });
-  
-      if (existingUser) {
-        return res.status(400).json({
-          statusCode: 400,
-          message: "User with this email already exists.",
-        });
-      }
+    }
 
     const salt = bcrypt.genSaltSync(10);
     console.log("🚀 ~ signup ~ salt:", salt);
@@ -131,8 +147,8 @@ const signup = async (req, res) => {
       "welcome to pocket buddy app",
       "welcome to our restaurants "
     );
-     // Return success
-     const { password, ...userWithoutPassword } = createUser._doc;
+    // Return success
+    const { password, ...userWithoutPassword } = createUser._doc;
     res.status(201).json({
       statusCode: 201,
       message: "User created successfully.",
@@ -451,7 +467,6 @@ const updateOwnerProfileById = async (req, res) => {
   }
 };
 
-
 const updateAdminProfileById = async (req, res) => {
   try {
     // Handle the file upload first
@@ -566,20 +581,27 @@ const deleteUserById = async (req, res) => {
 const loginUserWithToken = async (req, res) => {
   const { email, password } = req.body;
 
-  const foundUserFromEmail = await UserModel.findOne({ email: email }).populate("roleId");
+  const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
+    "roleId"
+  );
 
   if (foundUserFromEmail) {
     const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
 
     if (isMatch) {
       //token...
-      //all object to convert token 
+      //all object to convert token
       //const token = jwt.sign(foundUserFromEmail.toObject(), secret);
-      
+
       //only id and email to convert token
-      const token = jwt.sign({ id: foundUserFromEmail._id, 
-        email: foundUserFromEmail.email,
-        roleId: foundUserFromEmail.roleId }, secret)
+      const token = jwt.sign(
+        {
+          id: foundUserFromEmail._id,
+          email: foundUserFromEmail.email,
+          roleId: foundUserFromEmail.roleId,
+        },
+        secret
+      );
 
       //const token = jwt.sign({id:foundUserFromEmail._id},secret)
 
@@ -590,7 +612,7 @@ const loginUserWithToken = async (req, res) => {
         data: {
           _id: foundUserFromEmail._id,
           email: foundUserFromEmail.email,
-          roleId: foundUserFromEmail.roleId,  // this includes the `.name` if populated
+          roleId: foundUserFromEmail.roleId, // this includes the `.name` if populated
         },
       });
     } else {
