@@ -8,7 +8,7 @@ const app = express();
 app.use(
   cors({
     origin: "*",
-    origin: "https://pocket-buddy.vercel.app",
+    // origin: "https://pocket-buddy.vercel.app",
     credentials: true,
   })
 );
