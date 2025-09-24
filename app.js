@@ -5,7 +5,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 //express object..
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    origin: "https://pocket-buddy.vercel.app",
+    credentials: true,
+  })
+);
 app.use(express.json()); //to accept data as json...
 
 const roleRoutes = require("./src/routes/RoleRouter");
