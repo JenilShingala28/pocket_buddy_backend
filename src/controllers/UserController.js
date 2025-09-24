@@ -124,14 +124,24 @@ const ulogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
+
     const foundUser = await UserModel.findOne({ email }).populate("roleId");
 
     if (!foundUser) {
       return res.status(404).json({ message: "Email not found" });
     }
 
-    // Compare password
+    if (!foundUser.password) {
+      return res
+        .status(500)
+        .json({ message: "User password is missing in DB" });
+    }
+
     const isMatch = bcrypt.compareSync(password, foundUser.password);
 
     if (!isMatch) {
