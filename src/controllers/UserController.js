@@ -41,51 +41,51 @@ const upload = multer({
   //fileFilter:
 }).single("image");
 
-const ulogin = async (req, res) => {
-  //req.body email and password: password
-  //password -->plain ===  db -->encrypted
-  //bcrypt  --> plain == enc --> match : true \\ false
+// const ulogin = async (req, res) => {
+//   //req.body email and password: password
+//   //password -->plain ===  db -->encrypted
+//   //bcrypt  --> plain == enc --> match : true \\ false
 
-  const email = req.body.email;
-  const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
+//   const email = req.body.email;
+//   const password = req.body.password;
+//   const confirmPassword = req.body.confirmPassword;
 
-  //select * from users where email =? and password = ?
-  //userModel.find({email:email,password:password})
-  //email --> object -->abc --{password:hashedPassword}
-  //normal password compare --> hashedPassword
+//   //select * from users where email =? and password = ?
+//   //userModel.find({email:email,password:password})
+//   //email --> object -->abc --{password:hashedPassword}
+//   //normal password compare --> hashedPassword
 
-  //const foundUserFromEmail = await userModel.findOne({email:req.body.email})
-  const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
-    "roleId"
-  );
-  console.log(foundUserFromEmail);
+//   //const foundUserFromEmail = await userModel.findOne({email:req.body.email})
+//   const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
+//     "roleId"
+//   );
+//   console.log(foundUserFromEmail);
 
-  if (foundUserFromEmail != null) {
-    //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
-    const isMatch = bcrypt.compareSync(
-      password,
-      foundUserFromEmail.password,
-      confirmPassword,
-      foundUserFromEmail.confirmPassword
-    );
+//   if (foundUserFromEmail != null) {
+//     //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
+//     const isMatch = bcrypt.compareSync(
+//       password,
+//       foundUserFromEmail.password,
+//       confirmPassword,
+//       foundUserFromEmail.confirmPassword
+//     );
 
-    if (isMatch === true) {
-      res.status(200).json({
-        message: "login successfully",
-        data: foundUserFromEmail,
-      });
-    } else {
-      res.status(404).json({
-        message: "password not found",
-      });
-    }
-  } else {
-    res.status(404).json({
-      message: "email not found",
-    });
-  }
-};
+//     if (isMatch === true) {
+//       res.status(200).json({
+//         message: "login successfully",
+//         data: foundUserFromEmail,
+//       });
+//     } else {
+//       res.status(404).json({
+//         message: "password not found",
+//       });
+//     }
+//   } else {
+//     res.status(404).json({
+//       message: "email not found",
+//     });
+//   }
+// };
 
 // authorization
 // const loginuserWithToken = async (req, res) => {
@@ -119,6 +119,34 @@ const ulogin = async (req, res) => {
 //     });
 //   }
 // };
+
+const ulogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const foundUser = await UserModel.findOne({ email }).populate("roleId");
+
+    if (!foundUser) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    // Compare password
+    const isMatch = bcrypt.compareSync(password, foundUser.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+
+    res.status(200).json({
+      message: "Login successful",
+      data: foundUser,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 const signup = async (req, res) => {
   try {
