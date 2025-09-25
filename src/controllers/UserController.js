@@ -65,9 +65,9 @@ const ulogin = async (req, res) => {
     //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
     const isMatch = bcrypt.compareSync(
       password,
-      foundUserFromEmail.password
-      // confirmPassword,
-      // foundUserFromEmail.confirmPassword
+      foundUserFromEmail.password,
+      confirmPassword,
+      foundUserFromEmail.confirmPassword
     );
 
     if (isMatch === true) {
@@ -681,28 +681,45 @@ const loginUserWithToken = async (req, res) => {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    const foundUserFromEmail = await UserModel.findOne({ email }).populate(
-      "roleId"
-    );
+    const foundUserFromEmail = await UserModel.findOne({ email })
+      .select("+password") // Include the password field
+      .populate("roleId") // Populate main user's role
+      .populate({
+        path: "userId",
+        populate: { path: "roleId" }, // Populate roleId inside userId
+      });
+
     if (!foundUserFromEmail) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (!foundUserFromEmail.password) {
-      return res.status(500).json({ message: "User has no password in DB" });
+    // if (!foundUserFromEmail.password) {
+    //   return res.status(500).json({ message: "User has no password in DB" });
+    // }
+
+    const passwordFromDB =
+      foundUserFromEmail.password || foundUserFromEmail.userId?.password;
+
+    if (!passwordFromDB) {
+      return res
+        .status(500)
+        .json({ message: "No password found for this user" });
     }
 
-    const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
+    const isMatch = bcrypt.compareSync(password, passwordFromDB);
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    const roleData =
+      foundUserFromEmail.roleId || foundUserFromEmail.userId?.roleId;
+
     const token = jwt.sign(
       {
         id: foundUserFromEmail._id,
         email: foundUserFromEmail.email,
-        roleId: foundUserFromEmail.roleId,
+        roleId: roleData,
       },
       secret
     );
@@ -713,7 +730,10 @@ const loginUserWithToken = async (req, res) => {
       data: {
         _id: foundUserFromEmail._id,
         email: foundUserFromEmail.email,
-        roleId: foundUserFromEmail.roleId,
+        firstName: foundUserFromEmail.firstName,
+        lastName: foundUserFromEmail.lastName,
+        roleId: roleData,
+        userId: foundUserFromEmail.userId,
       },
     });
   } catch (err) {
