@@ -65,9 +65,9 @@ const ulogin = async (req, res) => {
     //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
     const isMatch = bcrypt.compareSync(
       password,
-      foundUserFromEmail.password,
-      confirmPassword,
-      foundUserFromEmail.confirmPassword
+      foundUserFromEmail.password
+      // confirmPassword,
+      // foundUserFromEmail.confirmPassword
     );
 
     if (isMatch === true) {
@@ -624,109 +624,103 @@ const deleteUserById = async (req, res) => {
   }
 };
 
-const loginUserWithToken = async (req, res) => {
-  const { email, password } = req.body;
-
-  const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
-    "roleId"
-  );
-
-  if (foundUserFromEmail) {
-    const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
-
-    if (isMatch) {
-      //token...
-      //all object to convert token
-      //const token = jwt.sign(foundUserFromEmail.toObject(), secret);
-
-      //only id and email to convert token
-      const token = jwt.sign(
-        {
-          id: foundUserFromEmail._id,
-          email: foundUserFromEmail.email,
-          roleId: foundUserFromEmail.roleId,
-        },
-        secret
-      );
-
-      //const token = jwt.sign({id:foundUserFromEmail._id},secret)
-
-      res.status(200).json({
-        message: "user loggedin..",
-
-        token: token,
-        data: {
-          _id: foundUserFromEmail._id,
-          email: foundUserFromEmail.email,
-          roleId: foundUserFromEmail.roleId, // this includes the `.name` if populated
-        },
-      });
-    } else {
-      res.status(420).json({
-        message: "invalid cred...",
-      });
-    }
-  } else {
-    res.status(404).json({
-      message: "user not found..",
-    });
-  }
-};
-
 // const loginUserWithToken = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
+//   const { email, password } = req.body;
 
-//     if (!email || !password) {
-//       return res.status(400).json({ message: "Email and password required" });
-//     }
+//   const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
+//     "roleId"
+//   );
 
-//     const foundUserFromEmail = await UserModel.findOne({
-//       email: email,
-//     }).populate("roleId");
-
-//     if (!foundUserFromEmail) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     if (
-//       !foundUserFromEmail.password ||
-//       typeof foundUserFromEmail.password !== "string"
-//     ) {
-//       return res
-//         .status(500)
-//         .json({ message: "Password missing or invalid in DB" });
-//     }
-
+//   if (foundUserFromEmail) {
 //     const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
 
-//     if (!isMatch) {
-//       return res.status(401).json({ message: "Invalid credentials" });
+//     if (isMatch) {
+//       //token...
+//       //all object to convert token
+//       //const token = jwt.sign(foundUserFromEmail.toObject(), secret);
+
+//       //only id and email to convert token
+//       const token = jwt.sign(
+//         {
+//           id: foundUserFromEmail._id,
+//           email: foundUserFromEmail.email,
+//           roleId: foundUserFromEmail.roleId,
+//         },
+//         secret
+//       );
+
+//       //const token = jwt.sign({id:foundUserFromEmail._id},secret)
+
+//       res.status(200).json({
+//         message: "user loggedin..",
+
+//         token: token,
+//         data: {
+//           _id: foundUserFromEmail._id,
+//           email: foundUserFromEmail.email,
+//           roleId: foundUserFromEmail.roleId, // this includes the `.name` if populated
+//         },
+//       });
+//     } else {
+//       res.status(420).json({
+//         message: "invalid cred...",
+//       });
 //     }
-
-//     const token = jwt.sign(
-//       {
-//         id: foundUserFromEmail._id,
-//         email: foundUserFromEmail.email,
-//         roleId: foundUserFromEmail.roleId,
-//       },
-//       secret
-//     );
-
-//     res.status(200).json({
-//       message: "User logged in",
-//       token: token,
-//       data: {
-//         _id: foundUserFromEmail._id,
-//         email: foundUserFromEmail.email,
-//         roleId: foundUserFromEmail.roleId,
-//       },
+//   } else {
+//     res.status(404).json({
+//       message: "user not found..",
 //     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
 //   }
 // };
+
+const loginUserWithToken = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    const foundUserFromEmail = await UserModel.findOne({ email }).populate(
+      "roleId"
+    );
+    if (!foundUserFromEmail) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!foundUserFromEmail.password) {
+      return res.status(500).json({ message: "User has no password in DB" });
+    }
+
+    const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: foundUserFromEmail._id,
+        email: foundUserFromEmail.email,
+        roleId: foundUserFromEmail.roleId,
+      },
+      secret
+    );
+
+    res.status(200).json({
+      message: "User logged in",
+      token,
+      data: {
+        _id: foundUserFromEmail._id,
+        email: foundUserFromEmail.email,
+        roleId: foundUserFromEmail.roleId,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 module.exports = {
   getUser,
