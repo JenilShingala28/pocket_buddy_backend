@@ -7,28 +7,28 @@ const LocationModel = require("../models/LocationModel");
 const fs = require("fs");
 
 // storage;
-const storage = multer.diskStorage({
-  destination: "./upload",
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
-// const uploadDir = path.join(process.cwd(), "uploads");
-
-// // make sure folder exists
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir, { recursive: true });
-// }
-
 // const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, uploadDir); // ✅ relative folder
-//   },
+//   destination: "./upload",
 //   filename: function (req, file, cb) {
 //     cb(null, file.originalname);
 //   },
 // });
+
+const uploadDir = path.join(process.cwd(), "uploads");
+
+// make sure folder exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir); // ✅ relative folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
 
 const upload = multer({
   storage: storage,
