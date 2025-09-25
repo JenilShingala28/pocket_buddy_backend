@@ -11,29 +11,29 @@ const mailUtil = require("../utils/MailUtil");
 const jwt = require("jsonwebtoken");
 const secret = "secret";
 
-//storage
-// const storage = multer.diskStorage({
-//   destination: "./upload",
-//   filename: function (req, file, cb) {
-//     cb(null, file.originalname);
-//   },
-// });
-
-const uploadDir = path.join(process.cwd(), "uploads");
-
-// make sure folder exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
+storage;
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir); // ✅ relative folder
-  },
+  destination: "./upload",
   filename: function (req, file, cb) {
     cb(null, file.originalname);
   },
 });
+
+// const uploadDir = path.join(process.cwd(), "uploads");
+
+// // make sure folder exists
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
+
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, uploadDir); // ✅ relative folder
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, file.originalname);
+//   },
+// });
 
 //multer object....
 const upload = multer({
@@ -41,51 +41,51 @@ const upload = multer({
   //fileFilter:
 }).single("image");
 
-// const ulogin = async (req, res) => {
-//   //req.body email and password: password
-//   //password -->plain ===  db -->encrypted
-//   //bcrypt  --> plain == enc --> match : true \\ false
+const ulogin = async (req, res) => {
+  //req.body email and password: password
+  //password -->plain ===  db -->encrypted
+  //bcrypt  --> plain == enc --> match : true \\ false
 
-//   const email = req.body.email;
-//   const password = req.body.password;
-//   const confirmPassword = req.body.confirmPassword;
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
 
-//   //select * from users where email =? and password = ?
-//   //userModel.find({email:email,password:password})
-//   //email --> object -->abc --{password:hashedPassword}
-//   //normal password compare --> hashedPassword
+  //select * from users where email =? and password = ?
+  //userModel.find({email:email,password:password})
+  //email --> object -->abc --{password:hashedPassword}
+  //normal password compare --> hashedPassword
 
-//   //const foundUserFromEmail = await userModel.findOne({email:req.body.email})
-//   const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
-//     "roleId"
-//   );
-//   console.log(foundUserFromEmail);
+  //const foundUserFromEmail = await userModel.findOne({email:req.body.email})
+  const foundUserFromEmail = await UserModel.findOne({ email: email }).populate(
+    "roleId"
+  );
+  console.log(foundUserFromEmail);
 
-//   if (foundUserFromEmail != null) {
-//     //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
-//     const isMatch = bcrypt.compareSync(
-//       password,
-//       foundUserFromEmail.password,
-//       confirmPassword,
-//       foundUserFromEmail.confirmPassword
-//     );
+  if (foundUserFromEmail != null) {
+    //const isMatch = bcrypt.compareSync(req.body.password,foundUserFromEmail.password)
+    const isMatch = bcrypt.compareSync(
+      password,
+      foundUserFromEmail.password,
+      confirmPassword,
+      foundUserFromEmail.confirmPassword
+    );
 
-//     if (isMatch === true) {
-//       res.status(200).json({
-//         message: "login successfully",
-//         data: foundUserFromEmail,
-//       });
-//     } else {
-//       res.status(404).json({
-//         message: "password not found",
-//       });
-//     }
-//   } else {
-//     res.status(404).json({
-//       message: "email not found",
-//     });
-//   }
-// };
+    if (isMatch === true) {
+      res.status(200).json({
+        message: "login successfully",
+        data: foundUserFromEmail,
+      });
+    } else {
+      res.status(404).json({
+        message: "password not found",
+      });
+    }
+  } else {
+    res.status(404).json({
+      message: "email not found",
+    });
+  }
+};
 
 // authorization
 // const loginuserWithToken = async (req, res) => {
@@ -120,43 +120,51 @@ const upload = multer({
 //   }
 // };
 
-const ulogin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// const ulogin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
+//     if (!email || !password) {
+//       return res
+//         .status(400)
+//         .json({ message: "Email and password are required" });
+//     }
 
-    const foundUser = await UserModel.findOne({ email }).populate("roleId");
+//     const foundUser = await UserModel.findOne({ email }).populate("roleId");
 
-    if (!foundUser) {
-      return res.status(404).json({ message: "Email not found" });
-    }
+//     if (!foundUser) {
+//       return res.status(404).json({ message: "Email not found" });
+//     }
 
-    if (!foundUser.password) {
-      return res
-        .status(500)
-        .json({ message: "User password is missing in DB" });
-    }
+//     if (!foundUser.password || typeof foundUser.password !== "string") {
+//       return res
+//         .status(500)
+//         .json({ message: "User password is missing or invalid in DB" });
+//     }
 
-    const isMatch = bcrypt.compareSync(password, foundUser.password);
+//     // bcrypt.compareSync throws error if either argument is invalid
+//     let isMatch = false;
+//     try {
+//       isMatch = bcrypt.compareSync(password, foundUser.password);
+//     } catch (err) {
+//       console.error("Bcrypt error:", err);
+//       return res.status(500).json({ message: "Error comparing passwords" });
+//     }
 
-    if (!isMatch) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
+//     if (!isMatch) {
+//       return res.status(401).json({ message: "Incorrect password" });
+//     }
 
-    res.status(200).json({
-      message: "Login successful",
-      data: foundUser,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     res.status(200).json({
+//       message: "Login successful",
+//       data: foundUser,
+//       token: "your-jwt-token", // optional
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 const signup = async (req, res) => {
   try {
@@ -664,6 +672,62 @@ const loginUserWithToken = async (req, res) => {
     });
   }
 };
+
+// const loginUserWithToken = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({ message: "Email and password required" });
+//     }
+
+//     const foundUserFromEmail = await UserModel.findOne({
+//       email: email,
+//     }).populate("roleId");
+
+//     if (!foundUserFromEmail) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     if (
+//       !foundUserFromEmail.password ||
+//       typeof foundUserFromEmail.password !== "string"
+//     ) {
+//       return res
+//         .status(500)
+//         .json({ message: "Password missing or invalid in DB" });
+//     }
+
+//     const isMatch = bcrypt.compareSync(password, foundUserFromEmail.password);
+
+//     if (!isMatch) {
+//       return res.status(401).json({ message: "Invalid credentials" });
+//     }
+
+//     const token = jwt.sign(
+//       {
+//         id: foundUserFromEmail._id,
+//         email: foundUserFromEmail.email,
+//         roleId: foundUserFromEmail.roleId,
+//       },
+//       secret
+//     );
+
+//     res.status(200).json({
+//       message: "User logged in",
+//       token: token,
+//       data: {
+//         _id: foundUserFromEmail._id,
+//         email: foundUserFromEmail.email,
+//         roleId: foundUserFromEmail.roleId,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 module.exports = {
   getUser,
   deleteUser,
