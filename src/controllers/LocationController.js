@@ -6,7 +6,7 @@ const { Network } = require("inspector");
 const LocationModel = require("../models/LocationModel");
 const fs = require("fs");
 
-storage;
+// storage;
 const storage = multer.diskStorage({
   destination: "./upload",
   filename: function (req, file, cb) {

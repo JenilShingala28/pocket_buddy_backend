@@ -11,7 +11,7 @@ const mailUtil = require("../utils/MailUtil");
 const jwt = require("jsonwebtoken");
 const secret = "secret";
 
-storage;
+// storage;
 const storage = multer.diskStorage({
   destination: "./upload",
   filename: function (req, file, cb) {

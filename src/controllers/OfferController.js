@@ -5,7 +5,7 @@ const path = require("path");
 const cloudinaryUtil = require("../utils/CloudinaryUtil");
 const fs = require("fs");
 
-storage;
+// storage
 const storage = multer.diskStorage({
   destination: "/upload",
   filename: function (req, file, cb) {
