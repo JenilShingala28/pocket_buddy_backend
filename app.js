@@ -51,22 +51,22 @@ app.use("/notification", notificationRoutes);
 const dashboardRoutes = require("./src/routes/DashBoardRouter");
 app.use("/dashboard", dashboardRoutes); //
 
-mongoose.connect(process.env.DB_URL).then(() => {
-  console.log("database connected....");
-});
+// mongoose.connect(process.env.DB_URL).then(() => {
+//   console.log("database connected....");
+// });
 
-// const dbURL =
-//   process.env.NODE_ENV === "production"
-//     ? process.env.PROD_DB_URL // MongoDB Atlas
-//     : process.env.DB_URL; // Local MongoDB / Compass
+const dbURL =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_DB_URL // MongoDB Atlas
+    : process.env.DB_URL; // Local MongoDB / Compass
 
-// mongoose
-//   .connect(dbURL, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   })
-//   .then(() => console.log("Database connected..."))
-//   .catch((err) => console.error("DB Connection Error:", err));
+mongoose
+  .connect(dbURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Database connected..."))
+  .catch((err) => console.error("DB Connection Error:", err));
 
 // server creation...
 
