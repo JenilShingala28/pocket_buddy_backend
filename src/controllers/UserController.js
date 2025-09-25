@@ -19,7 +19,7 @@ const secret = "secret";
 //   },
 // });
 
-const uploadDir = path.join(process.cwd(), "uploads");
+const uploadDir = path.join(process.cwd(), "upload");
 
 // make sure folder exists
 if (!fs.existsSync(uploadDir)) {
